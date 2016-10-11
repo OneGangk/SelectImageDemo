@@ -39,8 +39,8 @@
 - (void)setModel:(PhotoModel *)model {
     _model = model;
     _imageView.frame = self.bounds;
-    if (_model.image) {
-        _imageView.image = _model.image;
+    if (_model.thumbImage) {
+        _imageView.image = _model.thumbImage;
     }else{
         /**
          注意几个方面 1.也就是用模型的好处，我拿到了高清的图片就把它添加到模型里面，下次就不需要在去加载了。
@@ -50,21 +50,27 @@
                     PHImageRequestOptionsResizeModeNone  没有大小
                     我这里选择PHImageRequestOptionsResizeModeFast是因为我只需要加载的效率。
          */
+//        PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
+//        //deliveryMode 如果你设置了PHImageRequestOptionsDeliveryModeFastFormat 获取低质量 你在设置BOOL downloadFinined = ![[info objectForKey:PHImageCancelledKey] boolValue] && ![info objectForKey:PHImageErrorKey] && ![[info objectForKey:PHImageResultIsDegradedKey] boolValue];是没有用的 也就是说你只能获取到低质量的图
+//        options.deliveryMode = PHImageRequestOptionsDeliveryModeFastFormat;
+//        [[PHImageManager defaultManager] requestImageForAsset:_model.asset targetSize:CGSizeMake(screen_width, screen_height) contentMode:PHImageContentModeAspectFit options:options resultHandler:^(UIImage * _Nullable result, NSDictionary * _Nullable info) {
+//                if (_model == model) {
+//                    _model.thumbImage = result;
+//                    _imageView.image = result;
+//                }
+//        }];
         PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
         options.resizeMode = PHImageRequestOptionsResizeModeExact;
-        //deliveryMode 如果你设置了PHImageRequestOptionsDeliveryModeFastFormat 获取低质量 你在设置BOOL downloadFinined = ![[info objectForKey:PHImageCancelledKey] boolValue] && ![info objectForKey:PHImageErrorKey] && ![[info objectForKey:PHImageResultIsDegradedKey] boolValue];是没有用的 也就是说你只能获取到低质量的图
-        options.deliveryMode = PHImageRequestOptionsDeliveryModeOpportunistic;
-        [[PHImageManager defaultManager] requestImageForAsset:_model.asset targetSize:CGSizeMake(screen_width, screen_height) contentMode:PHImageContentModeAspectFit options:options resultHandler:^(UIImage * _Nullable result, NSDictionary * _Nullable info) {
-            NSLog(@"%@",result);
-//            //判断是否是高清的图片
+        [[PHImageManager defaultManager] requestImageForAsset:model.asset targetSize:CGSizeMake(screen_width/2, screen_height/2) contentMode:PHImageContentModeAspectFit options:options resultHandler:^(UIImage * _Nullable result, NSDictionary * _Nullable info) {
             BOOL downloadFinined = ![[info objectForKey:PHImageCancelledKey] boolValue] && ![info objectForKey:PHImageErrorKey] && ![[info objectForKey:PHImageResultIsDegradedKey] boolValue];
+            if (downloadFinined) {
+                _model.thumbImage = result;
+                _imageView.image = result;
+            }else{
                 if (_model == model) {
-                    if (downloadFinined) {
-                        _model.image = result;
-                    }
-                    _model.thumbImage = result;
                     _imageView.image = result;
                 }
+            }
         }];
     }
     [self setFlagStateForModel:model];

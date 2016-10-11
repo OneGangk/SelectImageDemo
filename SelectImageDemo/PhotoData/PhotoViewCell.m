@@ -55,7 +55,6 @@
                         _model.image = result;
                         _imageView.image = _model.image;
                     }else{
-                        _model.thumbImage = result;
                         _imageView.image = result;
                     }
                 }

@@ -17,7 +17,6 @@ const NSInteger maxCountInLine = 4; /**< 每行显示图片张数 */
 
 @interface PhotoListViewController ()<UICollectionViewDelegate, UICollectionViewDataSource, PhotoListCellDelageta, PhotoViewContorllerDelegate>
 @property (nonatomic, strong) UICollectionView  *collectionView;
-@property (strong, nonatomic) PhotoListCell      *cell;
 @property (strong, nonatomic) UIButton          *finishButton;      /**< 完成按钮 */
 
 @end
@@ -113,11 +112,11 @@ const NSInteger maxCountInLine = 4; /**< 每行显示图片张数 */
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
-    _cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"photoCell" forIndexPath:indexPath];
-    _cell.indexPath = indexPath;
-    _cell.model = _assetList[indexPath.row];
-    _cell.photoListCellDelegeta = self;
-    return _cell;
+    PhotoListCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"photoCell" forIndexPath:indexPath];
+    cell.indexPath = indexPath;
+    cell.model = _assetList[indexPath.row];
+    cell.photoListCellDelegeta = self;
+    return cell;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
@@ -168,6 +167,17 @@ const NSInteger maxCountInLine = 4; /**< 每行显示图片张数 */
             return;
         }
     }
+    if (!model.image) {
+        PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
+        options.synchronous = YES;
+        [[PHImageManager defaultManager] requestImageForAsset:model.asset targetSize:CGSizeMake(screen_width, screen_height) contentMode:PHImageContentModeAspectFit options:options resultHandler:^(UIImage * _Nullable result, NSDictionary * _Nullable info) {
+            BOOL downloadFinined = ![[info objectForKey:PHImageCancelledKey] boolValue] && ![info objectForKey:PHImageErrorKey] && ![[info objectForKey:PHImageResultIsDegradedKey] boolValue];
+            if (downloadFinined) {
+                model.image = result;
+            }
+        }];
+    }
+    
     model.isSelected = !model.isSelected;
     if (!model.isSelected) {
         [_selectedFalgList removeObject:model.image];
@@ -182,8 +192,8 @@ const NSInteger maxCountInLine = 4; /**< 每行显示图片张数 */
     }
     _selectedModel = model;
     
-    _cell = (id)[_collectionView cellForItemAtIndexPath:indexPath];
-    [_cell setFlagStateForModel:model];
+    PhotoListCell *cell = (id)[_collectionView cellForItemAtIndexPath:indexPath];
+    [cell setFlagStateForModel:model];
 }
 
 #pragma mark - ---------------------PhotoViewContorllerDelegate
